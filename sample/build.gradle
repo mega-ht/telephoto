@@ -62,27 +62,4 @@ dependencies {
 
   implementation(libs.circuit.runtime)
   implementation(libs.circuit.backstack)
-
-  implementation("com.facebook.fresco:fresco:3.4.0")
-  implementation("com.facebook.fresco:vito:3.4.0")
-  implementation("com.facebook.fresco:vito-core:3.4.0")
-  implementation("com.facebook.fresco:vito-options:3.4.0")
-  implementation("com.facebook.fresco:vito-provider:3.4.0")
-  implementation("com.facebook.fresco:vito-source:3.4.0")
-  implementation("com.facebook.fresco:vito-view:3.4.0")
-  // implementation("com.facebook.fresco:fresco-vito-composable:3.4.0")
-
-
-
-// 图片浏览库
-  implementation("com.jvziyaoyao.scale:image-viewer:1.1.0-alpha.5")
-// 大型图片支持
-  implementation("com.jvziyaoyao.scale:sampling-decoder:1.1.0-alpha.5")
-
-  implementation("io.github.panpf.zoomimage:zoomimage-compose-coil2:1.1.0-rc01")
-
-  implementation("io.github.panpf.zoomimage:zoomimage-compose-sketch4:1.1.0-rc01")
-
-  implementation("io.github.panpf.sketch4:sketch-compose:4.0.0-beta03")
-
 }
