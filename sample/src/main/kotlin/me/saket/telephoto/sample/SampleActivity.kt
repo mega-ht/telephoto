@@ -8,13 +8,16 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.core.snap
+import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
@@ -31,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import coil.Coil
@@ -102,10 +106,33 @@ class SampleActivity : AppCompatActivity() {
 //        Navigation(
 //          initialScreenKey = GalleryScreenKey(album)
 //        )
+
         Box {
-          Images(
-            onImageTap = { }
-          )
+          var imagePaths by rememberSaveable {
+            mutableStateOf(
+              // First = high-res, second = low-res
+              Pair<String, String?>(
+                "file:///android_asset/thumbnail.jpeg",
+                "file:///android_asset/thumbnail.jpeg",
+              )
+            )
+          }
+
+          LaunchedEffect(Unit) {
+            delay(1000)
+            imagePaths = Pair(
+              "file:///android_asset/smallSize.jpeg",
+              "file:///android_asset/thumbnail.jpeg"
+            )
+
+            delay(2000)
+            imagePaths = Pair(
+              "file:///android_asset/fullSize.jpeg",
+              "file:///android_asset/smallSize.jpeg"
+            )
+          }
+
+          ImageViewer(imagePaths.first, imagePaths.second, onImageTap = {})
 
           Icon(
             Icons.Default.PushPin,
@@ -115,36 +142,6 @@ class SampleActivity : AppCompatActivity() {
         }
       }
     }
-  }
-
-  @Composable fun Images(
-    onImageTap: () -> Unit = {}
-  ) {
-    var imagePaths by rememberSaveable {
-      mutableStateOf(
-        // First = high-res, second = low-res
-        Pair<String, String?>(
-          "file:///android_asset/thumbnail.jpeg",
-          "file:///android_asset/thumbnail.jpeg",
-        )
-      )
-    }
-
-    LaunchedEffect(Unit) {
-      delay(2000)
-      imagePaths = Pair(
-        "file:///android_asset/smallSize.jpeg",
-        "file:///android_asset/thumbnail.jpeg"
-      )
-
-      delay(2000)
-      imagePaths = Pair(
-        "file:///android_asset/fullSize.jpeg",
-        "file:///android_asset/smallSize.jpeg"
-      )
-    }
-
-    ImageViewer(imagePaths.first, imagePaths.second, onImageTap)
   }
 
   private fun enableStrictMode() {
@@ -203,7 +200,6 @@ private fun ImageViewer(
     mutableStateMapOf<String, Offset>()
   }
 
-  // Use derivedStateOf to compute values when the dependencies change
   val contentTransformationState = remember {
     derivedStateOf {
       zoomableImageState.zoomableState.contentTransformation.offset
@@ -215,11 +211,12 @@ private fun ImageViewer(
   }
 
   LaunchedEffect(imagePath, zoomableImageState.isImageDisplayedInFullQuality) {
-    if (imagePath.contains("full") && zoomableImageState.isImageDisplayedInFullQuality) {
-      val currentOffSet = zoomableState.contentTransformation.offset
-      val previousImageOffset = offsetCache[previousImagePath] ?: Offset.Zero
-      zoomableState.panBy(offset = previousImageOffset - currentOffSet, snap(0))
-    }
+    if (!zoomableImageState.isImageDisplayedInFullQuality) return@LaunchedEffect
+    // Check if last image
+    if (!imagePath.contains("full")) return@LaunchedEffect
+    val previousImageOffset = offsetCache[previousImagePath] ?: return@LaunchedEffect
+    val currentOffSet = zoomableState.contentTransformation.offset
+    zoomableState.panBy(offset = previousImageOffset - currentOffSet)
   }
 
   val imageRequest = ImageRequest.Builder(LocalContext.current)
@@ -229,14 +226,26 @@ private fun ImageViewer(
     .crossfade(false)
     .build()
 
-  ZoomableAsyncImage(
-    model = imageRequest,
-    contentDescription = "Image Preview",
-    state = zoomableImageState,
-    modifier = Modifier
-      .fillMaxSize(),
-    onClick = {
-      onImageTap()
-    }
-  )
+  Box {
+    ZoomableAsyncImage(
+      model = imageRequest,
+      contentDescription = "Image Preview",
+      state = zoomableImageState,
+      modifier = Modifier
+        .fillMaxSize(),
+      onClick = {
+        onImageTap()
+      }
+    )
+
+    Text(
+      text = imagePath,
+      color = Color.White,
+      modifier = Modifier
+        .align(Alignment.BottomCenter)
+        .padding(bottom = 40.dp)
+        .background(Color.Black.copy(alpha = .4f))
+        .padding(4.dp)
+    )
+  }
 }
