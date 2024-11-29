@@ -45,6 +45,9 @@ import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import kotlinx.coroutines.delay
 import me.saket.telephoto.sample.gallery.MediaAlbum
 import me.saket.telephoto.sample.gallery.MediaItem
+import me.saket.telephoto.zoomable.DoubleClickToZoomListener
+import me.saket.telephoto.zoomable.ZoomSpec
+import me.saket.telephoto.zoomable.ZoomableImageState
 import me.saket.telephoto.zoomable.coil.ZoomableAsyncImage
 import me.saket.telephoto.zoomable.rememberZoomableImageState
 import me.saket.telephoto.zoomable.rememberZoomableState
@@ -107,13 +110,19 @@ class SampleActivity : AppCompatActivity() {
 //          initialScreenKey = GalleryScreenKey(album)
 //        )
 
+        val zoomableState = rememberZoomableState(
+          autoApplyTransformations = true,
+          zoomSpec = ZoomSpec(maxZoomFactor = 5f)
+        )
+        val zoomableImageState = rememberZoomableImageState(zoomableState)
+
         Box {
           var imagePaths by rememberSaveable {
             mutableStateOf(
               // First = high-res, second = low-res
               Pair<String, String?>(
-                "file:///android_asset/thumbnail.jpeg",
-                "file:///android_asset/thumbnail.jpeg",
+                "file:///android_asset/thumbnail2.jpeg",
+                "file:///android_asset/thumbnail2.jpeg",
               )
             )
           }
@@ -121,18 +130,25 @@ class SampleActivity : AppCompatActivity() {
           LaunchedEffect(Unit) {
             delay(1000)
             imagePaths = Pair(
-              "file:///android_asset/smallSize.jpeg",
-              "file:///android_asset/thumbnail.jpeg"
+              "file:///android_asset/smallSize2.jpeg",
+              "file:///android_asset/thumbnail2.jpeg"
             )
+
+            // delay(500)
+
+            // zoomableState.zoomBy(2f, animationSpec = snap(0))
 
             delay(2000)
             imagePaths = Pair(
-              "file:///android_asset/fullSize.jpeg",
-              "file:///android_asset/smallSize.jpeg"
+              "file:///android_asset/fullSize2.jpeg",
+              "file:///android_asset/smallSize2.jpeg"
             )
+
+            // delay(1000)
+            // zoomableState.panBy(Offset(-260.0f, -88.5f) - zoomableState.contentTransformation.offset, snap(0))
           }
 
-          ImageViewer(imagePaths.first, imagePaths.second, onImageTap = {})
+          ImageViewer(imagePaths.first, imagePaths.second, onImageTap = {}, zoomableImageState)
 
           Icon(
             Icons.Default.PushPin,
@@ -190,34 +206,9 @@ internal fun TelephotoTheme(content: @Composable () -> Unit) {
 private fun ImageViewer(
   imagePath: String,
   previousImagePath: String?,
-  onImageTap: () -> Unit
+  onImageTap: () -> Unit,
+  zoomableImageState: ZoomableImageState
 ) {
-  val zoomableState = rememberZoomableState(
-    autoApplyTransformations = false
-  )
-  val zoomableImageState = rememberZoomableImageState(zoomableState)
-  val offsetCache = remember {
-    mutableStateMapOf<String, Offset>()
-  }
-
-  val contentTransformationState = remember {
-    derivedStateOf {
-      zoomableImageState.zoomableState.contentTransformation.offset
-    }
-  }
-
-  LaunchedEffect(contentTransformationState.value) {
-    offsetCache[imagePath] = contentTransformationState.value
-  }
-
-  LaunchedEffect(imagePath, zoomableImageState.isImageDisplayedInFullQuality) {
-    if (!zoomableImageState.isImageDisplayedInFullQuality) return@LaunchedEffect
-    // Check if last image
-    if (!imagePath.contains("full")) return@LaunchedEffect
-    val previousImageOffset = offsetCache[previousImagePath] ?: return@LaunchedEffect
-    val currentOffSet = zoomableState.contentTransformation.offset
-    zoomableState.panBy(offset = previousImageOffset - currentOffSet)
-  }
 
   val imageRequest = ImageRequest.Builder(LocalContext.current)
     .data(imagePath)
@@ -230,12 +221,14 @@ private fun ImageViewer(
     ZoomableAsyncImage(
       model = imageRequest,
       contentDescription = "Image Preview",
+      gesturesEnabled = !imagePath.contains("thumb"),
       state = zoomableImageState,
       modifier = Modifier
         .fillMaxSize(),
       onClick = {
         onImageTap()
-      }
+      },
+      onDoubleClick = DoubleClickToZoomListener.cycle(3f)
     )
 
     Text(

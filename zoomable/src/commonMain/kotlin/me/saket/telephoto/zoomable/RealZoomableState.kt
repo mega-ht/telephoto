@@ -69,18 +69,42 @@ internal class RealZoomableState internal constructor(
   autoApplyTransformations: Boolean = true,
 ) : ZoomableState {
 
+  private var previousOffset: Offset? = null
+  private var previousContentSize: Size? = null
+
   override val contentTransformation: ZoomableContentTransformation by derivedStateOf {
     val gestureStateInputs = calculateGestureStateInputs()
     if (gestureStateInputs != null) {
+      val newContentSize = gestureStateInputs.unscaledContentBounds.size
+      val hasContentSizeChanged = previousContentSize != newContentSize
+
+      // Calculate aspect ratios
+      val newAspectRatio = newContentSize.takeIf { it.height != 0f }
+        ?.let { it.width / it.height }
+      val previousAspectRatio = previousContentSize?.takeIf { it.height != 0f }
+        ?.let { it.width / it.height }
+      // Allow a small tolerance for floating-point comparisons
+      val hasAspectRatioChanged = newAspectRatio?.let { new ->
+        previousAspectRatio?.let { previous ->
+          abs(new - previous) > 0.001f // tolerance
+        }
+      } ?: true
+
       RealZoomableContentTransformation.calculateFrom(
         gestureStateInputs = gestureStateInputs,
         gestureState = gestureState.calculate(gestureStateInputs),
-      )
+        previousOffset = if (hasContentSizeChanged && !hasAspectRatioChanged) previousOffset else null
+      ).also {
+        if (hasContentSizeChanged) {
+          previousContentSize = newContentSize
+        }
+        previousOffset = it.offset
+      }
     } else {
       RealZoomableContentTransformation(
         isSpecified = false,
         contentSize = Size.Zero,
-        scale = ScaleFactor.Zero,  // Effectively hide the content until an initial zoom value is calculated.
+        scale = ScaleFactor.Zero,
         scaleMetadata = RealZoomableContentTransformation.ScaleMetadata(
           initialScale = ScaleFactor.Zero,
           userZoom = 0f,
@@ -767,7 +791,7 @@ internal data class ContentOffset(
    * The minimum offset needed to position the content within its layout
    * bounds with respect to [ZoomableState.contentAlignment].
    * */
-  private val baseOffset: Offset,
+  val baseOffset: Offset,
   val userOffset: UserOffset,
 ) {
   val isFinite: Boolean get() = finalOffset().isFinite
