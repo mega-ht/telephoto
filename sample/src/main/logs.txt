@@ -1,0 +1,31 @@
+// previous image
+12:39:02.987 I ==================================================
+12:39:02.987 I gestureStateInputs.baseZoom: BaseZoomFactor(value=ScaleFactor(1.4, 1.4))
+12:39:02.987 I gestureState.userZoom: UserZoomFactor(value=1.4814814)
+12:39:02.987 I contentZoom.finalZoom(): ScaleFactor(2.0, 2.0)
+12:39:02.987 I contentOffset.baseOffset: Offset(0.0, -222.9)
+12:39:02.987 I contentOffset.userOffset: UserOffset(value=Offset(130.0, 267.2))
+12:39:02.987 I contentOffset.finalOffset(): Offset(130.0, 44.3)
+12:39:02.988 I contentSize: Size(800.0, 1199.0)
+12:39:02.988 I offset: Offset(-260.0, -88.5)
+
+// new image = current implementation which keeps the old user offset
+13:07:08.955  I  gestureStateInputs.baseZoom: BaseZoomFactor(value=ScaleFactor(0.2, 0.2))
+13:07:08.955  I  gestureState.userZoom: UserZoomFactor(value=1.4814814)
+13:07:08.955  I  contentZoom.finalZoom(): ScaleFactor(0.3, 0.3)
+13:07:08.955  I  contentOffset.baseOffset: Offset(0.0, -1293.1)
+13:07:08.955  I  contentOffset.userOffset: UserOffset(value=Offset(130.0, 267.2))
+13:07:08.955  I  contentOffset.finalOffset(): Offset(130.0, -1025.9)
+13:07:08.955  I  contentSize: Size(4640.0, 6952.0)
+13:07:08.955  I  offset: Offset(-44.8, 353.8)
+
+// new image (by using panBy) = this should be the expected correct values
+12:39:06.020 I gestureStateInputs.baseZoom: BaseZoomFactor(value=ScaleFactor(0.2, 0.2))
+12:39:06.020 I gestureState.userZoom: UserZoomFactor(value=1.4814814)
+12:39:06.020 I contentZoom.finalZoom(): ScaleFactor(0.3, 0.3)
+12:39:06.020 I contentOffset.baseOffset: Offset(0.0, -1293.1)
+12:39:06.020 I contentOffset.userOffset: UserOffset(value=Offset(754.0, 1549.8))
+12:39:06.020 I contentOffset.finalOffset(): Offset(754.0, 256.7)
+12:39:06.020 I contentSize: Size(4640.0, 6952.0)
+12:39:06.021 I offset: Offset(-260.0, -88.5)
+

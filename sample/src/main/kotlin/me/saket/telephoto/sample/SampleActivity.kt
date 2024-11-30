@@ -134,11 +134,10 @@ class SampleActivity : AppCompatActivity() {
               "file:///android_asset/thumbnail2.jpeg"
             )
 
-            // delay(500)
+//            delay(500)
+//            zoomableState.zoomBy(2f, animationSpec = snap(0))
 
-            // zoomableState.zoomBy(2f, animationSpec = snap(0))
-
-            delay(2000)
+            delay(2500)
             imagePaths = Pair(
               "file:///android_asset/fullSize2.jpeg",
               "file:///android_asset/smallSize2.jpeg"

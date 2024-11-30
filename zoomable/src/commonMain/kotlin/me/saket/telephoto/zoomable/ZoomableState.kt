@@ -130,9 +130,6 @@ sealed interface ZoomableState {
     animationSpec: AnimationSpec<Float> = DefaultZoomAnimationSpec,
   )
 
-
-  suspend fun setCentroid(centroid: Offset,  animationSpec: AnimationSpec<Offset> = DefaultPanAnimationSpec,)
-
   /**
    * Zooms in or out around [centroid] to achieve a final zoom level specified by [zoomFactor],
    * and suspends until it's finished.

@@ -28,7 +28,6 @@ internal data class RealZoomableContentTransformation(
     fun calculateFrom(
       gestureStateInputs: GestureStateInputs,
       gestureState: GestureState,
-      previousOffset: Offset? = null,
     ): ZoomableContentTransformation {
       val contentZoom = ContentZoomFactor(
         baseZoom = gestureStateInputs.baseZoom,
@@ -39,10 +38,9 @@ internal data class RealZoomableContentTransformation(
         userOffset = gestureState.userOffset,
       )
       val contentSize = gestureStateInputs.unscaledContentBounds.size
-      val adjustedOffset = previousOffset?.let {
-        // Adjust the previous offset by the difference in base offsets
-        it - (gestureStateInputs.baseOffset - contentOffset.baseOffset)
-      } ?: (-contentOffset.finalOffset() * contentZoom.finalZoom()).let {
+
+
+      val offset = (-contentOffset.finalOffset() * contentZoom.finalZoom()).let {
         // Make it easier for consumers to perform `if (offset == zero)` checks.
         if (it == -Offset.Zero) Offset.Zero else it
       }
@@ -55,7 +53,7 @@ internal data class RealZoomableContentTransformation(
           initialScale = gestureStateInputs.baseZoom.value,
           userZoom = gestureState.userZoom.value,
         ),
-        offset = adjustedOffset,
+        offset = offset,
         centroid = gestureState.lastCentroid,
       )
     }

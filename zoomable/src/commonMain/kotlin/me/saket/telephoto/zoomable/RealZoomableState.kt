@@ -69,42 +69,21 @@ internal class RealZoomableState internal constructor(
   autoApplyTransformations: Boolean = true,
 ) : ZoomableState {
 
-  private var previousOffset: Offset? = null
-  private var previousContentSize: Size? = null
+  private var lastContentSize: Size? = null
+  private var lastGestureState: GestureState? = null
 
   override val contentTransformation: ZoomableContentTransformation by derivedStateOf {
     val gestureStateInputs = calculateGestureStateInputs()
     if (gestureStateInputs != null) {
-      val newContentSize = gestureStateInputs.unscaledContentBounds.size
-      val hasContentSizeChanged = previousContentSize != newContentSize
-
-      // Calculate aspect ratios
-      val newAspectRatio = newContentSize.takeIf { it.height != 0f }
-        ?.let { it.width / it.height }
-      val previousAspectRatio = previousContentSize?.takeIf { it.height != 0f }
-        ?.let { it.width / it.height }
-      // Allow a small tolerance for floating-point comparisons
-      val hasAspectRatioChanged = newAspectRatio?.let { new ->
-        previousAspectRatio?.let { previous ->
-          abs(new - previous) > 0.001f // tolerance
-        }
-      } ?: true
-
       RealZoomableContentTransformation.calculateFrom(
         gestureStateInputs = gestureStateInputs,
         gestureState = gestureState.calculate(gestureStateInputs),
-        previousOffset = if (hasContentSizeChanged && !hasAspectRatioChanged) previousOffset else null
-      ).also {
-        if (hasContentSizeChanged) {
-          previousContentSize = newContentSize
-        }
-        previousOffset = it.offset
-      }
+      )
     } else {
       RealZoomableContentTransformation(
         isSpecified = false,
         contentSize = Size.Zero,
-        scale = ScaleFactor.Zero,
+        scale = ScaleFactor.Zero,  // Effectively hide the content until an initial zoom value is calculated.
         scaleMetadata = RealZoomableContentTransformation.ScaleMetadata(
           initialScale = ScaleFactor.Zero,
           userZoom = 0f,
@@ -113,6 +92,21 @@ internal class RealZoomableState internal constructor(
         centroid = null,
       )
     }
+  }
+
+  private fun calculateNewUserOffset(
+    oldContentSize: Size,
+    newContentSize: Size,
+    oldUserOffset: UserOffset
+  ): UserOffset {
+    val scaleX = newContentSize.width / oldContentSize.width
+    val scaleY = newContentSize.height / oldContentSize.height
+    return UserOffset(
+      value = Offset(
+        x = oldUserOffset.value.x * scaleX,
+        y = oldUserOffset.value.y * scaleY
+      )
+    )
   }
 
   @get:FloatRange(from = 0.0, to = 1.0)
@@ -175,8 +169,9 @@ internal class RealZoomableState internal constructor(
           layoutSize = viewportSize,
           direction = layoutDirection
         )
+        val contentSize = unscaledContentBounds.size
         val baseZoomFactor = contentScale.computeScaleFactor(
-          srcSize = unscaledContentBounds.size,
+          srcSize = contentSize,
           dstSize = viewportSize,
         )
         check(baseZoomFactor != ScaleFactor.Zero) {
@@ -184,13 +179,30 @@ internal class RealZoomableState internal constructor(
         }
         val baseOffset = run {
           val alignmentOffset = contentAlignment.align(
-            size = (unscaledContentBounds.size * baseZoomFactor).roundToIntSize(),
+            size = (contentSize * baseZoomFactor).roundToIntSize(),
             space = viewportSize.roundToIntSize(),
             layoutDirection = layoutDirection,
           )
           // Take the content's top-left into account because it may not start at 0,0.
           unscaledContentBounds.topLeft + (-alignmentOffset.toOffset() / baseZoomFactor)
         }
+
+        lastContentSize?.takeIf { it != contentSize }?.let { oldContentSize ->
+          lastGestureState?.takeIf { it.userOffset.value != Offset.Zero }?.let { oldGestureState ->
+            gestureState = GestureStateCalculator { inputs ->
+              oldGestureState.copy(
+                userOffset = calculateNewUserOffset(
+                  oldContentSize = oldContentSize,
+                  newContentSize = contentSize,
+                  oldUserOffset = oldGestureState.userOffset
+                )
+              )
+            }
+          }
+        }
+
+        lastContentSize = contentSize
+
         GestureStateInputs(
           viewportSize = viewportSize,
           baseZoom = BaseZoomFactor(baseZoomFactor),
@@ -440,23 +452,6 @@ internal class RealZoomableState internal constructor(
     )
   }
 
-
-  override suspend fun setCentroid(centroid: Offset, animationSpec: AnimationSpec<Offset>) {
-    transformableState.transform(MutatePriority.UserInput) {
-      var previous = Offset.Zero
-      AnimationState(
-        typeConverter = Offset.VectorConverter,
-        initialValue = Offset.Zero,
-      ).animateTo(
-        targetValue = centroid,
-        animationSpec = animationSpec,
-      ) {
-        transformBy(centroid = this.value - previous)
-        previous = this.value
-      }
-    }
-  }
-
   override suspend fun zoomTo(
     zoomFactor: Float,
     centroid: Offset,
@@ -629,7 +624,11 @@ internal class RealZoomableState internal constructor(
   }
 
   private fun calculateGestureState(): GestureState? {
-    return calculateGestureStateInputs()?.let(gestureState::calculate)
+    return calculateGestureStateInputs()
+      ?.let(gestureState::calculate)
+      ?.also {
+        lastGestureState = it
+      }
   }
 
   // https://github.com/saket/telephoto/issues/41
