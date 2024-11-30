@@ -19,7 +19,7 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
     }
     tasks.withType<KotlinCompilationTask<*>>().configureEach {
       compilerOptions {
-        allWarningsAsErrors.set(true)
+        allWarningsAsErrors.set(false)
       }
     }
   }

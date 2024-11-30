@@ -47,6 +47,18 @@ internal data class RealZoomableContentTransformation(
         if (it == -Offset.Zero) Offset.Zero else it
       }
 
+      println("""
+        hmtz ==================================================
+        hmtz gestureStateInputs.baseZoom: ${gestureStateInputs.baseZoom}
+        hmtz gestureState.userZoom: ${gestureState.userZoom}
+        hmtz contentZoom.finalZoom(): ${contentZoom.finalZoom()}
+        hmtz contentOffset.baseOffset: ${contentOffset.baseOffset}
+        hmtz contentOffset.userOffset: ${contentOffset.userOffset}
+        hmtz contentOffset.finalOffset(): ${contentOffset.finalOffset()}
+        hmtz contentSize: $contentSize
+        hmtz adjustedOffset: $adjustedOffset
+      """.trimIndent())
+
       return RealZoomableContentTransformation(
         isSpecified = true,
         contentSize = contentSize,

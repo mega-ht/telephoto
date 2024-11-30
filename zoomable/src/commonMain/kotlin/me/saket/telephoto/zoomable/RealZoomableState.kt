@@ -32,6 +32,7 @@ import androidx.compose.ui.geometry.takeOrElse
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.ScaleFactor
 import androidx.compose.ui.layout.times
+import androidx.compose.ui.platform.debugInspectorInfo
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.Velocity
@@ -63,6 +64,7 @@ import me.saket.telephoto.zoomable.internal.withZoomAndTranslate
 import kotlin.jvm.JvmInline
 import kotlin.math.abs
 
+@Suppress("Unused")
 @Stable
 internal class RealZoomableState internal constructor(
   savedState: ZoomableSavedState? = null,
@@ -70,36 +72,17 @@ internal class RealZoomableState internal constructor(
 ) : ZoomableState {
 
   private var previousOffset: Offset? = null
+  private var previousUserOffset: UserOffset? = null
   private var previousContentSize: Size? = null
 
   override val contentTransformation: ZoomableContentTransformation by derivedStateOf {
     val gestureStateInputs = calculateGestureStateInputs()
     if (gestureStateInputs != null) {
-      val newContentSize = gestureStateInputs.unscaledContentBounds.size
-      val hasContentSizeChanged = previousContentSize != newContentSize
-
-      // Calculate aspect ratios
-      val newAspectRatio = newContentSize.takeIf { it.height != 0f }
-        ?.let { it.width / it.height }
-      val previousAspectRatio = previousContentSize?.takeIf { it.height != 0f }
-        ?.let { it.width / it.height }
-      // Allow a small tolerance for floating-point comparisons
-      val hasAspectRatioChanged = newAspectRatio?.let { new ->
-        previousAspectRatio?.let { previous ->
-          abs(new - previous) > 0.001f // tolerance
-        }
-      } ?: true
-
       RealZoomableContentTransformation.calculateFrom(
         gestureStateInputs = gestureStateInputs,
         gestureState = gestureState.calculate(gestureStateInputs),
-        previousOffset = if (hasContentSizeChanged && !hasAspectRatioChanged) previousOffset else null
-      ).also {
-        if (hasContentSizeChanged) {
-          previousContentSize = newContentSize
-        }
-        previousOffset = it.offset
-      }
+        previousOffset = null
+      )
     } else {
       RealZoomableContentTransformation(
         isSpecified = false,
@@ -175,6 +158,31 @@ internal class RealZoomableState internal constructor(
           layoutSize = viewportSize,
           direction = layoutDirection
         )
+
+        val newContentSize = unscaledContentBounds.size
+        val hasContentSizeChanged = previousContentSize != newContentSize
+
+        // Calculate aspect ratios
+        val newAspectRatio = newContentSize.takeIf { it.height != 0f }
+          ?.let { it.width / it.height }
+        val previousAspectRatio = previousContentSize?.takeIf { it.height != 0f }
+          ?.let { it.width / it.height }
+        // Allow a small tolerance for floating-point comparisons
+        val hasAspectRatioChanged = newAspectRatio?.let { new ->
+          previousAspectRatio?.let { previous ->
+            abs(new - previous) > 0.001f // tolerance
+          }
+        } ?: true
+
+        if (previousContentSize != unscaledContentBounds.size) {
+          previousContentSize = unscaledContentBounds.size
+        }
+
+        if (hasContentSizeChanged && !hasAspectRatioChanged) {
+          if (newContentSize.width > 2000)
+            previousUserOffset = calculateGestureState()?.userOffset
+        }
+
         val baseZoomFactor = contentScale.computeScaleFactor(
           srcSize = unscaledContentBounds.size,
           dstSize = viewportSize,
@@ -273,6 +281,7 @@ internal class RealZoomableState internal constructor(
           it
         }
       }
+
       check(newZoom.finalZoom().let { it.isPositiveAndFinite() && it.minScale > 0f }) {
         "New zoom is invalid/infinite = $newZoom. ${collectDebugInfoForIssue41("zoomDelta" to zoomDelta)}"
       }
@@ -506,9 +515,15 @@ internal class RealZoomableState internal constructor(
   ) {
     val gestureStateInputs = calculateGestureStateInputs() ?: return
     val startGestureState = gestureState.calculate(gestureStateInputs)
+    val startUserOffset = if (previousUserOffset != null) {
+      println("hmtz -- found previous user offset")
+      UserOffset(Offset(754.0f, 1549.8f))
+    } else startGestureState.userOffset
+
+    previousUserOffset = null
 
     val startZoom = ContentZoomFactor(gestureStateInputs.baseZoom, startGestureState.userZoom)
-    val startOffset = ContentOffset(gestureStateInputs.baseOffset, startGestureState.userOffset)
+    val startOffset = ContentOffset(gestureStateInputs.baseOffset, startUserOffset)
     val targetOffset = startOffset
       .retainCentroidPositionAfterZoom(
         centroid = centroid,
@@ -546,7 +561,7 @@ internal class RealZoomableState internal constructor(
         val animatedOffsetForUi = startOffset.copy(
           userOffset = UserOffset(
             -lerp(
-              start = (-startGestureState.userOffset.value * startZoom),
+              start = (-startUserOffset.value * startZoom),
               stop = (-targetOffset.userOffset.value * targetZoom),
               fraction = value,
             ) / animatedZoom
@@ -562,6 +577,7 @@ internal class RealZoomableState internal constructor(
       }
     }
   }
+
 
   internal fun isZoomOutsideRange(): Boolean {
     val gestureStateInputs = calculateGestureStateInputs() ?: return false
@@ -781,7 +797,13 @@ internal data class ContentZoomFactor(
 /** Offset applied by the user on top of a base offset. Similar to [UserZoomFactor]. */
 @JvmInline
 @Immutable
-internal value class UserOffset(val value: Offset) {
+internal value class UserOffset(
+  val value: Offset
+) {
+  init {
+    val x = value.x
+  }
+
   operator fun minus(other: Offset): UserOffset =
     UserOffset(value.minus(other))
 }

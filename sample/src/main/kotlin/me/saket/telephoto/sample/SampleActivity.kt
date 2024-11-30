@@ -121,31 +121,33 @@ class SampleActivity : AppCompatActivity() {
             mutableStateOf(
               // First = high-res, second = low-res
               Pair<String, String?>(
-                "file:///android_asset/thumbnail2.jpeg",
-                "file:///android_asset/thumbnail2.jpeg",
+                "file:///android_asset/thumbnail.jpeg",
+                "file:///android_asset/thumbnail.jpeg",
               )
             )
           }
 
           LaunchedEffect(Unit) {
-            delay(1000)
+            delay(500)
             imagePaths = Pair(
-              "file:///android_asset/smallSize2.jpeg",
-              "file:///android_asset/thumbnail2.jpeg"
+              "file:///android_asset/smallSize.jpeg",
+              "file:///android_asset/thumbnail.jpeg"
             )
 
-            // delay(500)
-
-            // zoomableState.zoomBy(2f, animationSpec = snap(0))
+            delay(500)
+            zoomableState.zoomBy(2f, animationSpec = snap(0))
 
             delay(2000)
+
+            println("hmtz - zoom ended")
+
             imagePaths = Pair(
-              "file:///android_asset/fullSize2.jpeg",
-              "file:///android_asset/smallSize2.jpeg"
+              "file:///android_asset/fullSize.jpeg",
+              "file:///android_asset/smallSize.jpeg"
             )
 
-            // delay(1000)
-            // zoomableState.panBy(Offset(-260.0f, -88.5f) - zoomableState.contentTransformation.offset, snap(0))
+//              delay(1000)
+//              zoomableState.panBy(Offset(-260.0f, -88.5f) - zoomableState.contentTransformation.offset, snap(0))
           }
 
           ImageViewer(imagePaths.first, imagePaths.second, onImageTap = {}, zoomableImageState)
@@ -235,10 +237,10 @@ private fun ImageViewer(
       text = imagePath,
       color = Color.White,
       modifier = Modifier
-        .align(Alignment.BottomCenter)
-        .padding(bottom = 40.dp)
-        .background(Color.Black.copy(alpha = .4f))
-        .padding(4.dp)
+          .align(Alignment.BottomCenter)
+          .padding(bottom = 40.dp)
+          .background(Color.Black.copy(alpha = .4f))
+          .padding(4.dp)
     )
   }
 }
