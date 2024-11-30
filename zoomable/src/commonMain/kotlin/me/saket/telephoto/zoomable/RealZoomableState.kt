@@ -77,7 +77,7 @@ internal class RealZoomableState internal constructor(
     if (gestureStateInputs != null) {
       RealZoomableContentTransformation.calculateFrom(
         gestureStateInputs = gestureStateInputs,
-        gestureState = gestureState.calculate(gestureStateInputs).also {
+        gestureState = calculateGestureState(gestureStateInputs).also {
           lastGestureState = it
         },
       )
@@ -625,10 +625,14 @@ internal class RealZoomableState internal constructor(
     return gestureStateInputs.calculate(viewportSize)
   }
 
-  private fun calculateGestureState(): GestureState? {
-    return calculateGestureStateInputs()?.let(gestureState::calculate)?.also {
+  private fun calculateGestureState(inputs: GestureStateInputs): GestureState {
+    return gestureState.calculate(inputs).also {
       lastGestureState = it
     }
+  }
+
+  private fun calculateGestureState(): GestureState? {
+    return calculateGestureStateInputs()?.let(::calculateGestureState)
   }
 
   // https://github.com/saket/telephoto/issues/41
