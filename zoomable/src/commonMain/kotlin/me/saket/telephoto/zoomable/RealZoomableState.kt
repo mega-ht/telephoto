@@ -115,7 +115,7 @@ internal class RealZoomableState internal constructor(
   override val zoomFraction: Float? by derivedStateOf {
     val gestureStateInputs = calculateGestureStateInputs()
     if (gestureStateInputs != null) {
-      val gestureState = gestureState.calculate(gestureStateInputs)
+      val gestureState = calculateGestureState(gestureStateInputs)
       val baseZoomFactor = gestureStateInputs.baseZoom
       val min = ContentZoomFactor.minimum(baseZoomFactor, zoomSpec.range).userZoom
       val max = ContentZoomFactor.maximum(baseZoomFactor, zoomSpec.range).userZoom
@@ -313,7 +313,7 @@ internal class RealZoomableState internal constructor(
 
   internal fun canConsumePanChange(panDelta: Offset): Boolean {
     val gestureStateInputs = calculateGestureStateInputs() ?: return false // Content isn't ready yet.
-    val current = gestureState.calculate(gestureStateInputs)
+    val current = calculateGestureState(gestureStateInputs)
 
     val currentZoom = ContentZoomFactor(gestureStateInputs.baseZoom, current.userZoom)
     val panDeltaWithZoom = panDelta / currentZoom
@@ -502,7 +502,7 @@ internal class RealZoomableState internal constructor(
     animationSpec: AnimationSpec<Float>,
   ) {
     val gestureStateInputs = calculateGestureStateInputs() ?: return
-    val startGestureState = gestureState.calculate(gestureStateInputs)
+    val startGestureState = calculateGestureState(gestureStateInputs)
 
     val startZoom = ContentZoomFactor(gestureStateInputs.baseZoom, startGestureState.userZoom)
     val startOffset = ContentOffset(gestureStateInputs.baseOffset, startGestureState.userOffset)
@@ -562,7 +562,7 @@ internal class RealZoomableState internal constructor(
 
   internal fun isZoomOutsideRange(): Boolean {
     val gestureStateInputs = calculateGestureStateInputs() ?: return false
-    val gestureState = gestureState.calculate(gestureStateInputs)
+    val gestureState = calculateGestureState(gestureStateInputs)
 
     val currentZoom = ContentZoomFactor(gestureStateInputs.baseZoom, gestureState.userZoom)
     val zoomWithinBounds = currentZoom.coerceUserZoomIn(zoomSpec.range)
@@ -571,7 +571,7 @@ internal class RealZoomableState internal constructor(
 
   internal suspend fun animateSettlingOfZoomOnGestureEnd() {
     val gestureStateInputs = calculateGestureStateInputs() ?: error("shouldn't have gotten called")
-    val gestureState = gestureState.calculate(gestureStateInputs)
+    val gestureState = calculateGestureState(gestureStateInputs)
 
     val userZoomWithinBounds = ContentZoomFactor(gestureStateInputs.baseZoom, gestureState.userZoom)
       .coerceUserZoomIn(zoomSpec.range)
