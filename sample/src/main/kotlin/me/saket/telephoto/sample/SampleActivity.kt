@@ -121,7 +121,11 @@ class SampleActivity : AppCompatActivity() {
             )
           }
 
+          var isAllImageLoaded by rememberSaveable { mutableStateOf(false) }
+
           LaunchedEffect(Unit) {
+            if (isAllImageLoaded) return@LaunchedEffect
+
             delay(2000)
             imagePaths = Pair(
               "file:///android_asset/smallSize.jpeg",
@@ -136,6 +140,8 @@ class SampleActivity : AppCompatActivity() {
               "file:///android_asset/fullSize.jpeg",
               "file:///android_asset/smallSize.jpeg"
             )
+
+            isAllImageLoaded = true
 
             // delay(1000)
             // zoomableState.panBy(Offset(-260.0f, -88.5f) - zoomableState.contentTransformation.offset, snap(0))
@@ -233,10 +239,10 @@ private fun ImageViewer(
       text = imagePath,
       color = Color.White,
       modifier = Modifier
-        .align(Alignment.BottomCenter)
-        .padding(bottom = 40.dp)
-        .background(Color.Black.copy(alpha = .4f))
-        .padding(4.dp)
+          .align(Alignment.BottomCenter)
+          .padding(bottom = 40.dp)
+          .background(Color.Black.copy(alpha = .4f))
+          .padding(4.dp)
     )
   }
 }

@@ -150,7 +150,10 @@ internal class RealZoomableState internal constructor(
 
   private var gestureState: GestureStateCalculator by mutableStateOf(
     GestureStateCalculator { inputs ->
-      savedState?.asGestureState(
+      savedState?.also {
+        lastGestureState = null
+        lastContentSize = null
+      }?.asGestureState(
         inputs = inputs,
         coerceOffsetWithinBounds = { contentOffset, contentZoom ->
           contentOffset.coerceWithinContentBounds(contentZoom, inputs)
