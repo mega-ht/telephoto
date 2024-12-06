@@ -30,6 +30,7 @@ import me.saket.telephoto.subsamplingimage.internal.ImageSampleSize
 import me.saket.telephoto.subsamplingimage.internal.ViewportImageTile
 import me.saket.telephoto.subsamplingimage.internal.ViewportTile
 import me.saket.telephoto.subsamplingimage.internal.calculateFor
+import me.saket.telephoto.subsamplingimage.internal.contains
 import me.saket.telephoto.subsamplingimage.internal.fastMapNotNull
 import me.saket.telephoto.subsamplingimage.internal.generate
 import me.saket.telephoto.subsamplingimage.internal.isNotEmpty
