@@ -2,13 +2,13 @@ name: Run tests and publish snapshot
 
 on:
   push:
-    branches: [ trunk ]
+    branches: [ trunk, saket/dec6/run-all-tests-on-macos ]
   pull_request:
 
 jobs:
   checks:
     name: Run tests
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
 
     steps:
       - uses: actions/checkout@v4
