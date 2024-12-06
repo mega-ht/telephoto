@@ -68,6 +68,7 @@ class AndroidTestConventionPlugin : Plugin<Project> {
       @Suppress("SdCardPath")
       directoriesToPull.set(listOf("/sdcard/Download/"))
       numUniformShards.set(3)
+      shardTargetRuntime.set(2) // 2 minutes.
       numFlakyTestAttempts.set(2) // 3 runs in total.
       fileCacheTtl.set(Duration.ofDays(30))
       timeout.set(Duration.ofMinutes(15)) // Note to self: this is per shard and not per test.
