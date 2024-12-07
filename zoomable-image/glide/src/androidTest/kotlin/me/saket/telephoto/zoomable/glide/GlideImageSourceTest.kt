@@ -78,13 +78,15 @@ class GlideImageSourceTest {
   @get:Rule val timeout = Timeout.seconds(30)!!
   @get:Rule val serverRule = MockWebServerRule()
   @get:Rule val testName = TestName()
+
+  private val screenshotValidator = CiScreenshotValidator(
+    context = { rule.activity },
+    tolerancePercentOnLocal = 0f,
+    tolerancePercentOnCi = 0.01f,
+  )
   @get:Rule val dropshots = Dropshots(
     filenameFunc = { it },
-    resultValidator = CiScreenshotValidator(
-      context = { rule.activity },
-      tolerancePercentOnLocal = 0f,
-      tolerancePercentOnCi = 0.1f,
-    )
+    resultValidator = screenshotValidator,
   )
 
   private val context: Context get() = rule.activity
@@ -262,6 +264,8 @@ class GlideImageSourceTest {
   }
 
   @Test fun correctly_resolve_vector_drawables() {
+    screenshotValidator.tolerancePercentOnCi = 0.06f
+
     var isImageDisplayed = false
     rule.setContent {
       ZoomableGlideImage(

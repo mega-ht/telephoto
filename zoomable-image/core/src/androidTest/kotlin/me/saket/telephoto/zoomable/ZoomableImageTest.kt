@@ -126,7 +126,6 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
-@OptIn(ExperimentalFoundationApi::class)
 @RunWith(TestParameterInjector::class)
 class ZoomableImageTest {
   @get:Rule val rule = createAndroidComposeRule<ScreenshotTestActivity>()
@@ -140,7 +139,7 @@ class ZoomableImageTest {
   )
   @get:Rule val dropshots = Dropshots(
     filenameFunc = { it },
-    resultValidator = screenshotValidator
+    resultValidator = screenshotValidator,
   )
 
   @Before fun setup() {
@@ -267,8 +266,6 @@ class ZoomableImageTest {
     @TestParameter layoutSize: LayoutSizeParam,
     @TestParameter subSamplingStatus: SubSamplingStatus,
   ) {
-    screenshotValidator.tolerancePercentOnCi = 0.18f
-
     lateinit var state: ZoomableImageState
     rule.setContent {
       ZoomableImage(
@@ -314,7 +311,6 @@ class ZoomableImageTest {
   }
 
   @Test fun rtl_layout_direction() {
-    screenshotValidator.tolerancePercentOnCi = 0.18f
     lateinit var state: ZoomableImageState
 
     rule.setContent {
@@ -1301,7 +1297,6 @@ class ZoomableImageTest {
   @Test fun calculate_content_bounds_for_full_quality_images(
     @TestParameter subSamplingStatus: SubSamplingStatus,
   ) {
-    screenshotValidator.tolerancePercentOnCi = 0.06f
     lateinit var imageState: ZoomableImageState
 
     rule.setContent {
@@ -1351,7 +1346,6 @@ class ZoomableImageTest {
   @Test fun calculate_content_bounds_for_placeholder_images(
     @TestParameter placeholderParam: PlaceholderImageParam
   ) {
-    screenshotValidator.tolerancePercentOnCi = 0.13f
     lateinit var imageState: ZoomableImageState
 
     rule.setContent {

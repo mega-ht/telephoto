@@ -104,13 +104,15 @@ class CoilImageSourceTest {
   @get:Rule val timeout = Timeout.seconds(30)!!
   @get:Rule val serverRule = MockWebServerRule()
   @get:Rule val testName = TestName()
+
+  private val screenshotValidator = CiScreenshotValidator(
+    context = { rule.activity },
+    tolerancePercentOnLocal = 0f,
+    tolerancePercentOnCi = 0.01f,
+  )
   @get:Rule val dropshots = Dropshots(
     filenameFunc = { it },
-    resultValidator = CiScreenshotValidator(
-      context = { rule.activity },
-      tolerancePercentOnLocal = 0f,
-      tolerancePercentOnCi = 0.1f,
-    )
+    resultValidator = screenshotValidator,
   )
 
   private val context: Context get() = rule.activity
@@ -343,6 +345,10 @@ class CoilImageSourceTest {
     @TestParameter requestData: SvgRequestDataParam,
     @TestParameter decodingState: SvgDecodingState,
   ) {
+    if (decodingState == SvgDecodingEnabled) {
+      screenshotValidator.tolerancePercentOnCi = 0.06f
+    }
+
     val model = when (requestData) {
       SvgRequestDataParam.RemoteUrl -> serverRule.server.url("emoji.svg")
       else -> requestData.data(context)
@@ -382,6 +388,8 @@ class CoilImageSourceTest {
   }
 
   @Test fun vector_drawables_should_not_be_sub_sampled() {
+    screenshotValidator.tolerancePercentOnCi = 0.06f
+
     var isImageDisplayed = false
     rule.setContent {
       ZoomableAsyncImage(

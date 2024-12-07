@@ -246,8 +246,6 @@ class SubSamplingImageTest {
   }
 
   @Test fun draw_base_tile_to_fill_gaps_in_foreground_tiles() {
-    screenshotValidator.tolerancePercentOnCi = 0.12f
-
     // This test blocks 2 decoders indefinitely so at least 3 decoders are needed.
     PooledImageRegionDecoder.overriddenPoolCount = 3
 
@@ -305,8 +303,6 @@ class SubSamplingImageTest {
   }
 
   @Test fun draw_tile_under_centroid_first() {
-    screenshotValidator.tolerancePercentOnCi = 0.15f
-
     // This test only allows 1 decoder to work so at least 2 decoders are needed.
     PooledImageRegionDecoder.overriddenPoolCount = 2
 
@@ -360,7 +356,7 @@ class SubSamplingImageTest {
   }
 
   @Test fun up_scaled_tiles_should_not_have_gaps_due_to_precision_loss() {
-    screenshotValidator.tolerancePercentOnCi = 0.014f
+    screenshotValidator.tolerancePercentOnCi = 0.013f
 
     rule.setContent {
       BoxWithConstraints {
@@ -462,8 +458,6 @@ class SubSamplingImageTest {
   @Test fun bitmap_tiles_should_be_at_least_half_of_layout_size(
     @TestParameter size: LayoutSizeParam,
   ) {
-    screenshotValidator.tolerancePercentOnCi = 0.1f
-
     rule.setContent {
       val zoomableState = rememberZoomableState(
         zoomSpec = ZoomSpec(maxZoomFactor = 1f)
@@ -508,7 +502,7 @@ class SubSamplingImageTest {
     @TestParameter alignment: AlignmentParam,
     @TestParameter contentScale: ContentScaleParam,
   ) {
-    screenshotValidator.tolerancePercentOnCi = 0.06f
+    screenshotValidator.tolerancePercentOnCi = 0.02f
 
     val skipAlignment = when (alignment) {
       AlignmentParam.TopCenter,
@@ -657,8 +651,6 @@ class SubSamplingImageTest {
   }
 
   @Test fun do_not_draw_base_tile_after_foreground_tiles_images_are_loaded() {
-    screenshotValidator.tolerancePercentOnCi = 7.4f
-
     // This test blocks 1 decoders so at least 2 decoders are needed.
     PooledImageRegionDecoder.overriddenPoolCount = 2
 
