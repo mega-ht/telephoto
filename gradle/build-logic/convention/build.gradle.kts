@@ -43,7 +43,7 @@ gradlePlugin {
     }
     register("compose") {
       id = "me.saket.compose"
-      implementationClass = "ComposeConventionPlugin"
+      implementationClass = "AndroidComposeConventionPlugin"
     }
   }
 }
