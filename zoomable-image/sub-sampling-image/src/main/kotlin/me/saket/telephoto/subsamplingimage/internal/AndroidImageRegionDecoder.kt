@@ -34,7 +34,7 @@ internal class AndroidImageRegionDecoder private constructor(
     val options = BitmapFactory.Options().apply {
       inSampleSize = region.sampleSize.size
       inPreferredConfig = imageOptions.config.toAndroidConfig()
-      if (Build.VERSION.SDK_INT >= 26) {
+      if (SDK_INT >= 26) {
         inPreferredColorSpace = imageOptions.androidColorSpace
       }
     }

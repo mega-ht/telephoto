@@ -3,6 +3,7 @@
 package me.saket.telephoto.subsampling
 
 import android.content.Context
+import android.content.pm.ActivityInfo
 import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.compose.foundation.border
@@ -815,6 +816,43 @@ class SubSamplingImageTest {
     rule.waitUntil {
       rule.onNodeWithTag("image").isImageDisplayed()
     }
+  }
+
+  @Test fun enable_hdr_color_mode_for_images_that_contain_ultra_hdr_content() {
+    assertThat(rule.activity.window.colorMode).isEqualTo(ActivityInfo.COLOR_MODE_DEFAULT)
+
+    var imageAssetName by mutableStateOf("fox_1000.jpg")
+    rule.setContent {
+      val zoomableState = rememberZoomableState()
+      SubSamplingImage(
+        modifier = Modifier
+          .fillMaxSize()
+          .zoomable(zoomableState)
+          .testTag("image"),
+        state = rememberSubSamplingImageState(
+          zoomableState = zoomableState,
+          imageSource = SubSamplingImageSource.asset(imageAssetName),
+        ),
+        contentDescription = null,
+      )
+    }
+
+    rule.waitUntil {
+      rule.onNodeWithTag("image").isImageDisplayed()
+    }
+    assertThat(rule.activity.window.colorMode).isEqualTo(ActivityInfo.COLOR_MODE_DEFAULT)
+
+    imageAssetName = "vadapav_ultra_hdr.jpg"
+    rule.waitUntil {
+      rule.onNodeWithTag("image").isImageDisplayedInFullQuality()
+    }
+    assertThat(rule.activity.window.colorMode).isEqualTo(ActivityInfo.COLOR_MODE_HDR)
+
+    imageAssetName = "path.jpg"
+    rule.waitUntil {
+      rule.onNodeWithTag("image").isImageDisplayedInFullQuality()
+    }
+    assertThat(rule.activity.window.colorMode).isEqualTo(ActivityInfo.COLOR_MODE_DEFAULT)
   }
 
   @Suppress("unused")
