@@ -193,10 +193,3 @@ package me.saket.telephoto.zoomable {
 
 }
 
-package me.saket.telephoto.zoomable.internal {
-
-  @kotlin.annotation.Retention(kotlin.annotation.AnnotationRetention.BINARY) @kotlin.annotation.Target(allowedTargets=kotlin.annotation.AnnotationTarget.CLASS) public @interface AndroidParcelize {
-  }
-
-}
-

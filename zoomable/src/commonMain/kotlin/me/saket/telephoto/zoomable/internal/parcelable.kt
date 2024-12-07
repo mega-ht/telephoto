@@ -4,6 +4,8 @@ package me.saket.telephoto.zoomable.internal
 
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.BINARY)
-annotation class AndroidParcelize
+internal annotation class AndroidParcelize
 
+// TODO: make this internal once K2 is enabled
+// https://youtrack.jetbrains.com/issue/KT-37316
 expect interface AndroidParcelable
