@@ -75,6 +75,15 @@ package me.saket.telephoto.subsamplingimage {
 package me.saket.telephoto.subsamplingimage.internal {
 
   public final class ImageChecksKt {
+    method @Deprecated public static suspend Object? canBeSubSampled(me.saket.telephoto.subsamplingimage.SubSamplingImageSource, android.content.Context context, kotlin.coroutines.Continuation<? super java.lang.Boolean>);
+    method @Deprecated public static suspend Object? exists(me.saket.telephoto.subsamplingimage.SubSamplingImageSource, android.content.Context context, kotlin.coroutines.Continuation<? super java.lang.Boolean>);
+  }
+
+}
+
+package me.saket.telephoto.subsamplingimage.util {
+
+  public final class ImageChecksKt {
     method public static suspend Object? canBeSubSampled(me.saket.telephoto.subsamplingimage.SubSamplingImageSource, android.content.Context context, kotlin.coroutines.Continuation<? super java.lang.Boolean>);
     method public static suspend Object? exists(me.saket.telephoto.subsamplingimage.SubSamplingImageSource, android.content.Context context, kotlin.coroutines.Continuation<? super java.lang.Boolean>);
   }

@@ -1,49 +1,26 @@
 package me.saket.telephoto.subsamplingimage.internal
 
 import android.content.Context
-import android.util.TypedValue
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import me.saket.telephoto.subsamplingimage.ResourceImageSource
 import me.saket.telephoto.subsamplingimage.SubSamplingImageSource
-import okio.Buffer
+import me.saket.telephoto.subsamplingimage.util.canBeSubSampled as canBeSubSampledV2
+import me.saket.telephoto.subsamplingimage.util.exists as existsV2
 
 /**
  * Check whether an image source can be sub-sampled and decoded using [AndroidImageRegionDecoder].
  */
+@Deprecated(
+  message = "Moved to another package",
+  replaceWith = ReplaceWith("canBeSubSampled(context)", "me.saket.telephoto.subsamplingimage.util.canBeSubSampled")
+)
 suspend fun SubSamplingImageSource.canBeSubSampled(context: Context): Boolean {
-  if (this is ResourceImageSource) {
-    return !isVectorDrawable(context)
-  }
-
-  return withContext(Dispatchers.IO) {
-    peek(context).use {
-      // Check for GIFs as well because Android's ImageDecoder
-      // can return a Bitmap for single-frame GIFs.
-      !isSvg(it) && !isGif(it)
-    }
-  }
+  return canBeSubSampledV2(context)
 }
 
 /** Check whether an image source exists and has non-zero bytes. */
+@Deprecated(
+  message = "Moved to another package",
+  replaceWith = ReplaceWith("exists(context)", "me.saket.telephoto.subsamplingimage.util.exists")
+)
 suspend fun SubSamplingImageSource.exists(context: Context): Boolean {
-  return withContext(Dispatchers.IO) {
-    try {
-      peek(context).read(Buffer(), byteCount = 1) != -1L
-    } catch (e: okio.FileNotFoundException) {
-      // This catch block currently makes an assumption that files are only read
-      // using okio, which is true for SubSamplingImageSource.file(), but might
-      // fail for SubSamplingImageSource.rawSource(). I could probably make exists()
-      // a member function of SubSamplingImageSource to fix that.
-      false
-    }
-  }
-}
-
-private suspend fun ResourceImageSource.isVectorDrawable(context: Context): Boolean {
-  return withContext(Dispatchers.IO) {
-    TypedValue().apply {
-      context.resources.getValue(id, this, /* resolveRefs = */ true)
-    }.string.endsWith(".xml")
-  }
+  return existsV2(context)
 }
