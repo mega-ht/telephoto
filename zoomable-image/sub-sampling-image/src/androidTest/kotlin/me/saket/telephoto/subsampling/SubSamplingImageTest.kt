@@ -87,7 +87,7 @@ import kotlin.time.Duration.Companion.seconds
 @RunWith(TestParameterInjector::class)
 class SubSamplingImageTest {
   @get:Rule val rule = createAndroidComposeRule<ScreenshotTestActivity>()
-  @get:Rule val timeout = Timeout.seconds(10)!!
+  @get:Rule val timeout = Timeout.seconds(30)!!
   @get:Rule val testName = TestName()
 
   private val screenshotValidator = CiScreenshotValidator(

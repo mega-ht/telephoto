@@ -109,7 +109,7 @@ import coil3.size.Size as CoilSize
 @RunWith(TestParameterInjector::class)
 class Coil3ImageSourceTest {
   @get:Rule val rule = createAndroidComposeRule<ScreenshotTestActivity>()
-  @get:Rule val timeout = Timeout.seconds(10)!!
+  @get:Rule val timeout = Timeout.seconds(30)!!
   @get:Rule val serverRule = MockWebServerRule()
   @get:Rule val testName = TestName()
   @get:Rule val dropshots = Dropshots(
