@@ -7,7 +7,6 @@ import android.view.KeyEvent
 import android.view.ViewConfiguration
 import androidx.compose.animation.core.SnapSpec
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.DraggableState
 import androidx.compose.foundation.gestures.Orientation
@@ -17,7 +16,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
@@ -1304,7 +1302,6 @@ class ZoomableImageTest {
       Box(
         Modifier
           .fillMaxSize()
-          .systemBarsPadding()
           .padding(24.dp)
       ) {
         ZoomableImage(
@@ -1353,7 +1350,6 @@ class ZoomableImageTest {
       Box(
         Modifier
           .fillMaxSize()
-          .systemBarsPadding()
           .padding(24.dp)
       ) {
         ZoomableImage(
@@ -1387,7 +1383,6 @@ class ZoomableImageTest {
       Box(
         Modifier
           .fillMaxSize()
-          .systemBarsPadding()
           .padding(24.dp),
         Alignment.Center,
       ) {
