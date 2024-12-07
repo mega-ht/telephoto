@@ -7,8 +7,8 @@ on:
 
 jobs:
   unit-tests:
-    name: Unit tests
-    runs-on: macos-latest
+    name: Run checks against JVM targets
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -22,22 +22,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
 
       - name: Run unit tests and friends
-        run: ./gradlew check
-
-  screenshot-tests:
-    name: Android screenshot tests
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          lfs: true
-      - uses: gradle/wrapper-validation-action@v1
-      - uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: 17
-      - uses: gradle/actions/setup-gradle@v4
+        run: ./gradlew testDebugUnitTest desktopTest
 
       - name: Run paparazzi screenshot tests
         run: ./gradlew verifyPaparazziDebug
@@ -72,6 +57,24 @@ jobs:
         with:
           name: instrumentation-test-report
           path: instrumentation-test-build-reports.zip
+
+  screenshot-tests:
+    name: Compile non-JVM sources
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - uses: gradle/wrapper-validation-action@v1
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Compile against iOS ARM64
+        run: ./gradlew compileKotlinIosArm64
 
   deploy-snapshot:
     name: Deploy snapshot
