@@ -14,7 +14,6 @@ kotlin {
       dependencies {
         implementation(compose("org.jetbrains.compose.ui:ui-util"))
         api(compose.foundation)
-        api(libs.androidx.annotation)
       }
     }
 

@@ -157,7 +157,7 @@ package me.saket.telephoto.zoomable {
     method public androidx.compose.ui.layout.ContentScale getContentScale();
     method public me.saket.telephoto.zoomable.ZoomableContentTransformation getContentTransformation();
     method public androidx.compose.ui.geometry.Rect getTransformedContentBounds();
-    method @FloatRange(from=0.0, to=1.0) public Float? getZoomFraction();
+    method public Float? getZoomFraction();
     method public me.saket.telephoto.zoomable.ZoomSpec getZoomSpec();
     method public suspend Object? panBy(long offset, optional androidx.compose.animation.core.AnimationSpec<androidx.compose.ui.geometry.Offset> animationSpec, optional kotlin.coroutines.Continuation<? super kotlin.Unit>);
     method public suspend Object? resetZoom(optional androidx.compose.animation.core.AnimationSpec<java.lang.Float> animationSpec, optional kotlin.coroutines.Continuation<? super kotlin.Unit>);
@@ -174,7 +174,7 @@ package me.saket.telephoto.zoomable {
     property public abstract androidx.compose.ui.layout.ContentScale contentScale;
     property public abstract me.saket.telephoto.zoomable.ZoomableContentTransformation contentTransformation;
     property public abstract androidx.compose.ui.geometry.Rect transformedContentBounds;
-    property @FloatRange(from=0.0, to=1.0) public abstract Float? zoomFraction;
+    property public abstract Float? zoomFraction;
     property public abstract me.saket.telephoto.zoomable.ZoomSpec zoomSpec;
     field public static final me.saket.telephoto.zoomable.ZoomableState.Companion Companion;
   }

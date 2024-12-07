@@ -2,7 +2,6 @@
 
 package me.saket.telephoto.zoomable
 
-import androidx.annotation.FloatRange
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.SnapSpec
 import androidx.compose.animation.core.Spring
@@ -96,7 +95,6 @@ sealed interface ZoomableState {
    * value hasn't been calculated yet and the content is hidden. A `null` value could be safely
    * treated the same as 0, but [Modifier.zoomable] leaves that decision up to you.
    */
-  @get:FloatRange(from = 0.0, to = 1.0)
   val zoomFraction: Float?
 
   /** The zoom spec passed to [rememberZoomableState]. */

@@ -2,7 +2,6 @@
 
 package me.saket.telephoto.zoomable
 
-import androidx.annotation.FloatRange
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.AnimationState
 import androidx.compose.animation.core.AnimationVector
@@ -91,7 +90,6 @@ internal class RealZoomableState internal constructor(
     }
   }
 
-  @get:FloatRange(from = 0.0, to = 1.0)
   override val zoomFraction: Float? by derivedStateOf {
     val gestureStateInputs = calculateGestureStateInputs()
     if (gestureStateInputs != null) {
