@@ -665,7 +665,7 @@ private suspend fun Context.copyImageToExternalStorage(imageFile: Path): Uri {
   val uri = fs.createMediaStoreUri(
     filename = imageFile.name,
     collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY),
-    directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath,
+    directory = null,
   )!!
   fs.write(uri.toOkioPath()) {
     fs.read(imageFile) {

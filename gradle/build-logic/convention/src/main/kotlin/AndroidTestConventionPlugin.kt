@@ -60,7 +60,7 @@ class AndroidTestConventionPlugin : Plugin<Project> {
         listOf(
           mapOf(
             "model" to "Pixel7Atd",
-            "version" to 31,
+            "version" to 34,
             "gpu" to "software",  // Disable GPU acceleration to prevent screenshot differences.
           )
         )
