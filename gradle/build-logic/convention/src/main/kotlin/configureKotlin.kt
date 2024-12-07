@@ -12,7 +12,6 @@ internal fun Project.configureKotlin() {
   tasks.withType<KotlinCompilationTask<*>>().configureEach {
     compilerOptions {
       freeCompilerArgs.addAll(
-        "-Xjvm-default=all",
         "-Xcontext-receivers",
         "-Xexpect-actual-classes", // https://youtrack.jetbrains.com/issue/KT-61573
       )
