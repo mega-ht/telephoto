@@ -6,78 +6,38 @@ on:
   pull_request:
 
 jobs:
-  prepare:
-    name: Prepare workspace and cache dependencies
-    runs-on: ubuntu-latest
+  unit-tests:
+    name: Unit tests
+    runs-on: macos-latest
 
     steps:
       - uses: actions/checkout@v4
         with:
           lfs: true
+      - uses: gradle/wrapper-validation-action@v1
       - uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: 17
       - uses: gradle/actions/setup-gradle@v4
 
-      - name: Cache Gradle dependencies
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            gradle-${{ runner.os }}
-
-      - name: Upload prepared workspace
-        uses: actions/upload-artifact@v4
-        with:
-          name: workspace
-          path: .
-
-      - uses: gradle/actions/setup-gradle@v4
-      - uses: oNaiPs/secrets-to-env-action@v1
-        with:
-          secrets: ${{ toJSON(secrets) }}
-
-  unit-tests:
-    name: Unit tests
-    runs-on: macos-latest
-    needs: prepare
-
-    steps:
-      - name: Download prepared workspace
-        uses: actions/download-artifact@v4
-        with:
-          name: workspace
-      - name: Cache Gradle dependencies
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
       - name: Run unit tests and friends
         run: ./gradlew check
 
   screenshot-tests:
     name: Android screenshot tests
     runs-on: ubuntu-latest
-    needs: prepare
 
     steps:
-      - name: Download prepared workspace
-        uses: actions/download-artifact@v4
+      - uses: actions/checkout@v4
         with:
-          name: workspace
-      - name: Cache Gradle dependencies
-        uses: actions/cache@v3
+          lfs: true
+      - uses: gradle/wrapper-validation-action@v1
+      - uses: actions/setup-java@v4
         with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          distribution: 'zulu'
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
 
       - name: Run paparazzi screenshot tests
         run: ./gradlew verifyPaparazziDebug
@@ -92,8 +52,13 @@ jobs:
             **/out/failures/
             paparazzi/paparazzi-gradle-plugin/src/test/projects/**/build/reports/paparazzi/images/
 
+      - uses: oNaiPs/secrets-to-env-action@v1
+        with:
+          secrets: ${{ toJSON(secrets) }}
+
       - name: Run instrumented screenshot tests
         env:
+          # https://docs.emulator.wtf/github/tokenless
           EW_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./gradlew testDebugWithEmulatorWtf
 
@@ -114,21 +79,18 @@ jobs:
     timeout-minutes: 10
     if: github.repository == 'saket/telephoto' && github.ref == 'refs/heads/trunk'
     needs: [unit-tests, screenshot-tests]
-
     steps:
-      - name: Download prepared workspace
-        uses: actions/download-artifact@v4
+      - uses: actions/checkout@v3
+      - uses: gradle/wrapper-validation-action@v1
+      - uses: actions/setup-java@v3
         with:
-          name: workspace
-      - name: Cache Gradle dependencies
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          distribution: 'zulu'
+          java-version: 17
+      - uses: gradle/gradle-build-action@v2.4.2
+
       - name: Ensure snapshot version
         run: ./gradlew throwIfVersionIsNotSnapshot
+
       - name: Publish snapshot
         run: ./gradlew clean publish --no-daemon --no-parallel --no-configuration-cache --stacktrace
         env:
