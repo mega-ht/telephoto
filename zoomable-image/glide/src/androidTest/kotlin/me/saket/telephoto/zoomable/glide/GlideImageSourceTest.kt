@@ -24,10 +24,12 @@ import assertk.assertions.isInstanceOf
 import assertk.assertions.isNotInstanceOf
 import assertk.assertions.isNotNull
 import com.bumptech.glide.Glide
+import com.bumptech.glide.GlideBuilder
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withCrossFade
+import com.bumptech.glide.manager.ConnectivityMonitor
 import com.dropbox.dropshots.Dropshots
 import com.google.testing.junit.testparameterinjector.TestParameter
 import com.google.testing.junit.testparameterinjector.TestParameterInjector
@@ -98,6 +100,18 @@ class GlideImageSourceTest {
         else -> error("unknown path = ${request.path}")
       }
     }
+
+    // Workaround for https://github.com/bumptech/glide/issues/4567.
+    Glide.init(
+      context,
+      GlideBuilder().setConnectivityMonitorFactory { _, _ ->
+        object : ConnectivityMonitor {
+          override fun onStart() = Unit
+          override fun onStop() = Unit
+          override fun onDestroy() = Unit
+        }
+      }
+    )
   }
 
   @After
