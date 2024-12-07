@@ -11,7 +11,7 @@ package me.saket.telephoto.zoomable {
     field public static final me.saket.telephoto.zoomable.ZoomableImageSource.Companion Companion;
   }
 
-  public static final class ZoomableImageSource.Companion {
+  @androidx.compose.runtime.Stable public static final class ZoomableImageSource.Companion {
   }
 
   @androidx.compose.runtime.Stable public static sealed interface ZoomableImageSource.ImageDelegate {
@@ -41,11 +41,17 @@ package me.saket.telephoto.zoomable {
     property public final me.saket.telephoto.subsamplingimage.SubSamplingImageSource source;
   }
 
+  public final class ZoomableImageSourceKt {
+    method public static me.saket.telephoto.zoomable.ZoomableImageSource.ResolveResult copy(me.saket.telephoto.zoomable.ZoomableImageSource.ResolveResult, optional me.saket.telephoto.zoomable.ZoomableImageSource.ImageDelegate? delegate, optional long crossfadeDuration, optional androidx.compose.ui.graphics.painter.Painter? placeholder);
+  }
+
   @androidx.compose.runtime.Stable public final class ZoomableImageState {
     method public me.saket.telephoto.zoomable.ZoomableState getZoomableState();
     method public boolean isImageDisplayed();
+    method public boolean isImageDisplayedInFullQuality();
     method public boolean isPlaceholderDisplayed();
     property public final boolean isImageDisplayed;
+    property public final boolean isImageDisplayedInFullQuality;
     property public final boolean isPlaceholderDisplayed;
     property public final me.saket.telephoto.zoomable.ZoomableState zoomableState;
   }
