@@ -50,7 +50,6 @@ import me.saket.telephoto.zoomable.internal.copy
 import me.saket.telephoto.zoomable.internal.div
 import me.saket.telephoto.zoomable.internal.isPositiveAndFinite
 import me.saket.telephoto.zoomable.internal.isSpecifiedAndFinite
-import me.saket.telephoto.zoomable.internal.isSpecifiedAndNonEmpty
 import me.saket.telephoto.zoomable.internal.isUnspecifiedOrEmpty
 import me.saket.telephoto.zoomable.internal.maxScale
 import me.saket.telephoto.zoomable.internal.minScale
@@ -70,7 +69,7 @@ internal class RealZoomableState internal constructor(
 ) : ZoomableState {
 
   override val contentTransformation: ZoomableContentTransformation by derivedStateOf {
-    val gestureStateInputs = calculateGestureStateInputs()
+    val gestureStateInputs = currentGestureStateInputs
     if (gestureStateInputs != null) {
       RealZoomableContentTransformation.calculateFrom(
         gestureStateInputs = gestureStateInputs,
@@ -92,7 +91,7 @@ internal class RealZoomableState internal constructor(
   }
 
   override val zoomFraction: Float? by derivedStateOf {
-    val gestureStateInputs = calculateGestureStateInputs()
+    val gestureStateInputs = currentGestureStateInputs
     if (gestureStateInputs != null) {
       val gestureState = gestureState.calculate(gestureStateInputs)
       val baseZoomFactor = gestureStateInputs.baseZoom
@@ -183,12 +182,16 @@ internal class RealZoomableState internal constructor(
     }
   }
 
+  private val currentGestureStateInputs: GestureStateInputs? by derivedStateOf {
+    gestureStateInputs.calculate(viewportSize)
+  }
+
   /** See [PlaceholderBoundsProvider]. */
   internal var placeholderBoundsProvider: PlaceholderBoundsProvider? by mutableStateOf(null)
 
   override val transformedContentBounds: Rect by derivedStateOf {
     with(contentTransformation) {
-      val bounds = calculateGestureStateInputs()?.let {
+      val bounds = currentGestureStateInputs?.let {
         it.unscaledContentBounds.withOrigin(transformOrigin) {
           times(scale).translate(offset)
         }
@@ -204,7 +207,7 @@ internal class RealZoomableState internal constructor(
    * listening to pan & zoom gestures.
    */
   internal val isReadyToInteract: Boolean
-    get() = calculateGestureStateInputs() != null
+    get() = currentGestureStateInputs != null
 
   @Suppress("NAME_SHADOWING")
   internal val transformableState = TransformableState { zoomDelta, panDelta, _, centroid ->
@@ -273,7 +276,7 @@ internal class RealZoomableState internal constructor(
   }
 
   internal fun canConsumePanChange(panDelta: Offset): Boolean {
-    val gestureStateInputs = calculateGestureStateInputs() ?: return false // Content isn't ready yet.
+    val gestureStateInputs = currentGestureStateInputs ?: return false // Content isn't ready yet.
     val current = gestureState.calculate(gestureStateInputs)
 
     val currentZoom = ContentZoomFactor(gestureStateInputs.baseZoom, current.userZoom)
@@ -395,7 +398,7 @@ internal class RealZoomableState internal constructor(
   }
 
   override suspend fun resetZoom(animationSpec: AnimationSpec<Float>) {
-    val baseZoomFactor = calculateGestureStateInputs()?.baseZoom ?: return
+    val baseZoomFactor = currentGestureStateInputs?.baseZoom ?: return
     zoomTo(
       zoomFactor = baseZoomFactor.maxScale,
       animationSpec = animationSpec,
@@ -420,7 +423,7 @@ internal class RealZoomableState internal constructor(
     centroid: Offset,
     animationSpec: AnimationSpec<Float>,
   ) {
-    val gestureStateInputs = calculateGestureStateInputs() ?: return
+    val gestureStateInputs = currentGestureStateInputs ?: return
     val targetZoom = ContentZoomFactor.forFinalZoom(
       baseZoom = gestureStateInputs.baseZoom,
       finalZoom = zoomFactor,
@@ -462,7 +465,7 @@ internal class RealZoomableState internal constructor(
     mutatePriority: MutatePriority,
     animationSpec: AnimationSpec<Float>,
   ) {
-    val gestureStateInputs = calculateGestureStateInputs() ?: return
+    val gestureStateInputs = currentGestureStateInputs ?: return
     val startGestureState = gestureState.calculate(gestureStateInputs)
 
     val startZoom = ContentZoomFactor(gestureStateInputs.baseZoom, startGestureState.userZoom)
@@ -522,7 +525,7 @@ internal class RealZoomableState internal constructor(
   }
 
   internal fun isZoomOutsideRange(): Boolean {
-    val gestureStateInputs = calculateGestureStateInputs() ?: return false
+    val gestureStateInputs = currentGestureStateInputs ?: return false
     val gestureState = gestureState.calculate(gestureStateInputs)
 
     val currentZoom = ContentZoomFactor(gestureStateInputs.baseZoom, gestureState.userZoom)
@@ -531,7 +534,7 @@ internal class RealZoomableState internal constructor(
   }
 
   internal suspend fun animateSettlingOfZoomOnGestureEnd() {
-    val gestureStateInputs = calculateGestureStateInputs() ?: error("shouldn't have gotten called")
+    val gestureStateInputs = currentGestureStateInputs ?: error("shouldn't have gotten called")
     val gestureState = gestureState.calculate(gestureStateInputs)
 
     val userZoomWithinBounds = ContentZoomFactor(gestureStateInputs.baseZoom, gestureState.userZoom)
@@ -582,12 +585,8 @@ internal class RealZoomableState internal constructor(
     }
   }
 
-  private fun calculateGestureStateInputs(): GestureStateInputs? {
-    return gestureStateInputs.calculate(viewportSize)
-  }
-
   private fun calculateGestureState(): GestureState? {
-    return calculateGestureStateInputs()?.let(gestureState::calculate)
+    return currentGestureStateInputs?.let(gestureState::calculate)
   }
 
   // https://github.com/saket/telephoto/issues/41
@@ -597,7 +596,7 @@ internal class RealZoomableState internal constructor(
       extras.forEach { (key, value) ->
         appendLine("$key = $value")
       }
-      val gestureStateInputs = calculateGestureStateInputs()
+      val gestureStateInputs = currentGestureStateInputs
       appendLine("gestureStateInputs = $gestureStateInputs")
       appendLine("gestureState = ${calculateGestureState()}")
       appendLine("contentTransformation = $contentTransformation")
@@ -614,7 +613,7 @@ internal class RealZoomableState internal constructor(
   companion object {
     internal val Saver = Saver(
       save = { state ->
-        state.calculateGestureStateInputs()?.let { inputs ->
+        state.currentGestureStateInputs?.let { inputs ->
           ZoomableSavedState.from(
             gestureState = state.gestureState.calculate(inputs),
             gestureStateInputs = inputs,
