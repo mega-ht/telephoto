@@ -203,9 +203,8 @@ internal class RealZoomableState internal constructor(
    * Whether sufficient information is available about the content to start
    * listening to pan & zoom gestures.
    */
-  internal val isReadyToInteract: Boolean by derivedStateOf {
-    calculateGestureStateInputs() != null
-  }
+  internal val isReadyToInteract: Boolean
+    get() = calculateGestureStateInputs() != null
 
   @Suppress("NAME_SHADOWING")
   internal val transformableState = TransformableState { zoomDelta, panDelta, _, centroid ->
