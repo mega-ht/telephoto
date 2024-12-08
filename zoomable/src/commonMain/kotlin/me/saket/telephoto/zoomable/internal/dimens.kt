@@ -27,7 +27,7 @@ internal val Size.isSpecifiedAndNonEmpty: Boolean
   get() = isSpecified && !isEmpty()
 
 internal val Size.isUnspecifiedOrEmpty: Boolean
-  get() = !isSpecified || isEmpty()
+  get() = !isSpecifiedAndNonEmpty
 
 internal val ScaleFactor.maxScale: Float
   get() = maxOf(scaleX, scaleY)

@@ -38,9 +38,8 @@ internal data class ZoomableSavedState private constructor(
       userOffset = gestureState.userOffset.value.packToLong(),
       userZoom = gestureState.userZoom.value,
       centroid = gestureState.lastCentroid.packToLong(),
-      stateAdjusterInfo = gestureStateInputs.viewportSize
-        .takeIf { it.isSpecifiedAndNonEmpty }
-        ?.let { viewportSize ->
+      stateAdjusterInfo = gestureStateInputs.viewportSize.let { viewportSize ->
+        if (viewportSize.isSpecifiedAndNonEmpty) {
           StateRestorerInfo(
             viewportSize = viewportSize.packToLong(),
             contentOffsetAtViewportCenter = GestureStateAdjuster.calculateContentOffsetAtViewportCenter(
@@ -53,7 +52,10 @@ internal data class ZoomableSavedState private constructor(
               userZoom = gestureState.userZoom,
             ).finalZoom().packToLong(),
           )
-        },
+        } else {
+          null
+        }
+      },
     )
   }
 
