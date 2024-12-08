@@ -26,6 +26,9 @@ internal fun Size.discardFractionalParts(): IntSize {
 internal val Size.isSpecifiedAndNonEmpty: Boolean
   get() = isSpecified && !isEmpty()
 
+internal val Size.isUnspecifiedOrEmpty: Boolean
+  get() = !isSpecified || isEmpty()
+
 internal val ScaleFactor.maxScale: Float
   get() = maxOf(scaleX, scaleY)
 

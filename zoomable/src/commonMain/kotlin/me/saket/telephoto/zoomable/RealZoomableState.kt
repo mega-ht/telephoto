@@ -51,6 +51,7 @@ import me.saket.telephoto.zoomable.internal.div
 import me.saket.telephoto.zoomable.internal.isPositiveAndFinite
 import me.saket.telephoto.zoomable.internal.isSpecifiedAndFinite
 import me.saket.telephoto.zoomable.internal.isSpecifiedAndNonEmpty
+import me.saket.telephoto.zoomable.internal.isUnspecifiedOrEmpty
 import me.saket.telephoto.zoomable.internal.maxScale
 import me.saket.telephoto.zoomable.internal.minScale
 import me.saket.telephoto.zoomable.internal.minus
@@ -144,38 +145,41 @@ internal class RealZoomableState internal constructor(
 
   private val gestureStateInputs: GestureStateInputsCalculator by derivedStateOf {
     GestureStateInputsCalculator { viewportSize ->
-      if (isReadyToInteract) {
-        val unscaledContentBounds = unscaledContentLocation.location(
-          layoutSize = viewportSize,
-          direction = layoutDirection
-        )
-        val baseZoomFactor = contentScale.computeScaleFactor(
-          srcSize = unscaledContentBounds.size,
-          dstSize = viewportSize,
-        )
-        check(baseZoomFactor != ScaleFactor.Zero) {
-          "Base zoom shouldn't be zero. content bounds = $unscaledContentBounds, viewport size = $viewportSize"
-        }
-        val baseOffset = run {
-          val alignmentOffset = contentAlignment.align(
-            size = (unscaledContentBounds.size * baseZoomFactor).roundToIntSize(),
-            space = viewportSize.roundToIntSize(),
-            layoutDirection = layoutDirection,
-          )
-          // Take the content's top-left into account because it may not start at 0,0.
-          unscaledContentBounds.topLeft + (-alignmentOffset.toOffset() / baseZoomFactor)
-        }
-        GestureStateInputs(
-          viewportSize = viewportSize,
-          baseZoom = BaseZoomFactor(baseZoomFactor),
-          baseOffset = baseOffset,
-          unscaledContentBounds = unscaledContentBounds,
-          contentAlignment = contentAlignment,
+      if (viewportSize.isUnspecifiedOrEmpty || unscaledContentLocation == ZoomableContentLocation.Unspecified) {
+        return@GestureStateInputsCalculator null
+      }
+      val unscaledContentBounds = unscaledContentLocation.location(
+        layoutSize = viewportSize,
+        direction = layoutDirection,
+      )
+      if (unscaledContentBounds.size.isUnspecifiedOrEmpty) {
+        return@GestureStateInputsCalculator null
+      }
+
+      val baseZoomFactor = contentScale.computeScaleFactor(
+        srcSize = unscaledContentBounds.size,
+        dstSize = viewportSize,
+      )
+      check(baseZoomFactor != ScaleFactor.Zero) {
+        "Base zoom shouldn't be zero. content bounds = $unscaledContentBounds, viewport size = $viewportSize"
+      }
+      val baseOffset = run {
+        val alignmentOffset = contentAlignment.align(
+          size = (unscaledContentBounds.size * baseZoomFactor).roundToIntSize(),
+          space = viewportSize.roundToIntSize(),
           layoutDirection = layoutDirection,
         )
-      } else {
-        null
+        // Take the content's top-left into account because it may not start at 0,0.
+        unscaledContentBounds.topLeft + (-alignmentOffset.toOffset() / baseZoomFactor)
       }
+      GestureStateInputs(
+        viewportSize = viewportSize,
+        baseZoom = BaseZoomFactor(baseZoomFactor),
+        baseOffset = baseOffset,
+        unscaledContentBounds = unscaledContentBounds,
+        contentAlignment = contentAlignment,
+        layoutDirection = layoutDirection,
+      )
     }
   }
 
@@ -200,9 +204,7 @@ internal class RealZoomableState internal constructor(
    * listening to pan & zoom gestures.
    */
   internal val isReadyToInteract: Boolean by derivedStateOf {
-    viewportSize.isSpecifiedAndNonEmpty
-      && unscaledContentLocation != ZoomableContentLocation.Unspecified
-      && unscaledContentLocation.location(viewportSize, layoutDirection).size.isSpecifiedAndNonEmpty
+    calculateGestureStateInputs() != null
   }
 
   @Suppress("NAME_SHADOWING")
@@ -555,7 +557,7 @@ internal class RealZoomableState internal constructor(
   internal suspend fun fling(velocity: Velocity, density: Density) {
     check(velocity.x.isFinite() && velocity.y.isFinite()) { "Invalid velocity = $velocity" }
 
-    val gestureState = calculateGestureState() ?: error("called too early? ${!isReadyToInteract}")
+    val gestureState = calculateGestureState() ?: error("called too early?")
     transformableState.transform(MutatePriorities.FlingAnimation) {
       var previous = gestureState.userOffset.value
       AnimationState(
