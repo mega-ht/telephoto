@@ -257,6 +257,43 @@ class ZoomableImageTest {
     }
   }
 
+  @Test fun retain_transformations_across_image_changes_with_the_same_aspect_ratio() {
+    var assetName by mutableStateOf("fox_1000.jpg")
+    lateinit var state: ZoomableImageState
+
+    rule.setContent {
+      ZoomableImage(
+        modifier = Modifier
+          .fillMaxSize()
+          .testTag("image"),
+        image = ZoomableImageSource.asset(assetName, subSample = true),
+        contentDescription = null,
+        state = rememberZoomableImageState(
+          rememberZoomableState(zoomSpec = ZoomSpec(maxZoomFactor = 5f))
+        ).also { state = it },
+      )
+    }
+
+    rule.waitUntil {
+      state.isImageDisplayedInFullQuality
+    }
+    rule.onNodeWithTag("image").performTouchInput {
+      doubleClick(position = center + Offset(100f, 100f))
+    }
+    rule.runOnIdle {
+      dropshots.assertSnapshot(rule.activity, testName.methodName + "_[before]")
+    }
+
+    assetName = "fox_1500.jpg"
+    rule.waitUntil {
+      val isTargetImage = state.zoomableState.contentTransformation.contentSize == Size(1500f, 1000f)
+      state.isImageDisplayedInFullQuality && isTargetImage
+    }
+    rule.runOnIdle {
+      dropshots.assertSnapshot(rule.activity, testName.methodName + "_[after]")
+    }
+  }
+
   @Test fun various_image_sizes_and_alignments(
     @TestParameter alignment: AlignmentParam,
     @TestParameter contentScale: ContentScaleParam,
