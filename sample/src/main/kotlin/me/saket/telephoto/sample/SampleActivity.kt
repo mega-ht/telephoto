@@ -120,28 +120,33 @@ class SampleActivity : AppCompatActivity() {
   @Composable fun Images(
     onImageTap: () -> Unit = {}
   ) {
+
+    var isImageLoaded by rememberSaveable { mutableStateOf(false) }
     var imagePaths by rememberSaveable {
       mutableStateOf(
         // First = high-res, second = low-res
         Pair<String, String?>(
-          "file:///android_asset/thumbnail.jpeg",
-          "file:///android_asset/thumbnail.jpeg",
+          "file:///android_asset/thumbnail2.jpeg",
+          "file:///android_asset/thumbnail2.jpeg",
         )
       )
     }
 
     LaunchedEffect(Unit) {
+      if (isImageLoaded) return@LaunchedEffect
       delay(2000)
       imagePaths = Pair(
-        "file:///android_asset/smallSize.jpeg",
-        "file:///android_asset/thumbnail.jpeg"
+        "file:///android_asset/smallSize2.jpeg",
+        "file:///android_asset/thumbnail2.jpeg"
       )
 
       delay(2000)
       imagePaths = Pair(
-        "file:///android_asset/fullSize.jpeg",
-        "file:///android_asset/smallSize.jpeg"
+        "file:///android_asset/fullSize2.jpeg",
+        "file:///android_asset/smallSize2.jpeg"
       )
+
+      isImageLoaded = true
     }
 
     ImageViewer(imagePaths.first, imagePaths.second, onImageTap)
@@ -195,32 +200,8 @@ private fun ImageViewer(
   previousImagePath: String?,
   onImageTap: () -> Unit
 ) {
-  val zoomableState = rememberZoomableState(
-    autoApplyTransformations = false
-  )
+  val zoomableState = rememberZoomableState()
   val zoomableImageState = rememberZoomableImageState(zoomableState)
-  val offsetCache = remember {
-    mutableStateMapOf<String, Offset>()
-  }
-
-  // Use derivedStateOf to compute values when the dependencies change
-  val contentTransformationState = remember {
-    derivedStateOf {
-      zoomableImageState.zoomableState.contentTransformation.offset
-    }
-  }
-
-  LaunchedEffect(contentTransformationState.value) {
-    offsetCache[imagePath] = contentTransformationState.value
-  }
-
-  LaunchedEffect(imagePath, zoomableImageState.isImageDisplayedInFullQuality) {
-    if (imagePath.contains("full") && zoomableImageState.isImageDisplayedInFullQuality) {
-      val currentOffSet = zoomableState.contentTransformation.offset
-      val previousImageOffset = offsetCache[previousImagePath] ?: Offset.Zero
-      zoomableState.panBy(offset = previousImageOffset - currentOffSet, snap(0))
-    }
-  }
 
   val imageRequest = ImageRequest.Builder(LocalContext.current)
     .data(imagePath)
