@@ -8,13 +8,16 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.core.snap
+import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
@@ -31,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import coil.Coil
@@ -41,6 +45,7 @@ import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import kotlinx.coroutines.delay
 import me.saket.telephoto.sample.gallery.MediaAlbum
 import me.saket.telephoto.sample.gallery.MediaItem
+import me.saket.telephoto.zoomable.DoubleClickToZoomListener
 import me.saket.telephoto.zoomable.coil.ZoomableAsyncImage
 import me.saket.telephoto.zoomable.rememberZoomableImageState
 import me.saket.telephoto.zoomable.rememberZoomableState
@@ -210,14 +215,28 @@ private fun ImageViewer(
     .crossfade(false)
     .build()
 
-  ZoomableAsyncImage(
-    model = imageRequest,
-    contentDescription = "Image Preview",
-    state = zoomableImageState,
-    modifier = Modifier
-      .fillMaxSize(),
-    onClick = {
-      onImageTap()
-    }
-  )
+  Box {
+    ZoomableAsyncImage(
+      model = imageRequest,
+      contentDescription = "Image Preview",
+      //gesturesEnabled = !imagePath.contains("thumb"),
+      state = zoomableImageState,
+      modifier = Modifier
+        .fillMaxSize(),
+      onClick = {
+        onImageTap()
+      },
+      onDoubleClick = DoubleClickToZoomListener.cycle(3f)
+    )
+
+    Text(
+      text = imagePath,
+      color = Color.White,
+      modifier = Modifier
+          .align(Alignment.BottomCenter)
+          .padding(bottom = 40.dp)
+          .background(Color.Black.copy(alpha = .4f))
+          .padding(4.dp)
+    )
+  }
 }
