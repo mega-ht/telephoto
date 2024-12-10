@@ -266,7 +266,7 @@ class ZoomableImageTest {
         modifier = Modifier
           .fillMaxSize()
           .testTag("image"),
-        image = ZoomableImageSource.asset(assetName, subSample = true),
+        image = ZoomableImageSource.subSampledAssetWithPreview(assetName),
         contentDescription = null,
         state = rememberZoomableImageState(
           rememberZoomableState(zoomSpec = ZoomSpec(maxZoomFactor = 5f))
@@ -286,12 +286,11 @@ class ZoomableImageTest {
 
     assetName = "fox_1500.jpg"
     rule.waitUntil {
-      val isTargetImage = state.zoomableState.contentTransformation.contentSize == Size(1500f, 1000f)
-      state.isImageDisplayedInFullQuality && isTargetImage
+      state.zoomableState.contentTransformation.contentSize == Size(1500f, 1000f)
     }
-    rule.runOnIdle {
-      dropshots.assertSnapshot(rule.activity, testName.methodName + "_[after]")
-    }
+    // This does not use runOnIdle() because the image's
+    // centroid should be retained immediately on the next frame.
+    dropshots.assertSnapshot(rule.activity, testName.methodName + "_[after]")
   }
 
   @Test fun various_image_sizes_and_alignments(
@@ -1944,6 +1943,26 @@ internal fun ZoomableImageSource.Companion.asset(assetName: String, subSample: B
           } else {
             ZoomableImageSource.PainterDelegate(assetPainter(assetName))
           }
+        )
+      }
+    }
+  }
+}
+
+@Composable
+internal fun ZoomableImageSource.Companion.subSampledAssetWithPreview(assetName: String): ZoomableImageSource {
+  return remember(assetName) {
+    object : ZoomableImageSource {
+      @Composable
+      override fun resolve(canvasSize: Flow<Size>): ResolveResult {
+        val context = LocalContext.current
+        val assetBitmap = remember {
+          context.assets.open(assetName).use(BitmapFactory::decodeStream)!!.asImageBitmap()
+        }
+        return ResolveResult(
+          delegate = ZoomableImageSource.SubSamplingDelegate(
+            SubSamplingImageSource.asset(assetName, preview = assetBitmap)
+          ),
         )
       }
     }

@@ -71,6 +71,9 @@ internal operator fun Offset.times(zoom: ContentZoomFactor): Offset =
 internal operator fun Size.times(zoom: ContentZoomFactor): Size =
   times(zoom.finalZoom())
 
+internal fun Size.aspectRatio(): Float =
+  width / height
+
 internal operator fun UserZoomFactor.times(operand: Float): UserZoomFactor =
   UserZoomFactor(value.times(operand))
 

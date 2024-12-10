@@ -12,13 +12,16 @@ import androidx.compose.animation.core.animateTo
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.splineBasedDecay
 import androidx.compose.foundation.MutatePriority
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -36,7 +39,10 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.toOffset
 import androidx.compose.ui.util.lerp
-import me.saket.telephoto.zoomable.ContentZoomFactor.Companion.ZoomDeltaEpsilon
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.withContext
 import me.saket.telephoto.zoomable.ZoomableContentLocation.SameAsLayoutBounds
 import me.saket.telephoto.zoomable.internal.MutatePriorities
 import me.saket.telephoto.zoomable.internal.PlaceholderBoundsProvider
@@ -44,6 +50,7 @@ import me.saket.telephoto.zoomable.internal.RealZoomableContentTransformation
 import me.saket.telephoto.zoomable.internal.TransformableState
 import me.saket.telephoto.zoomable.internal.Zero
 import me.saket.telephoto.zoomable.internal.ZoomableSavedState
+import me.saket.telephoto.zoomable.internal.aspectRatio
 import me.saket.telephoto.zoomable.internal.calculateTopLeftToOverlapWith
 import me.saket.telephoto.zoomable.internal.coerceIn
 import me.saket.telephoto.zoomable.internal.copy
@@ -59,6 +66,7 @@ import me.saket.telephoto.zoomable.internal.times
 import me.saket.telephoto.zoomable.internal.unaryMinus
 import me.saket.telephoto.zoomable.internal.withOrigin
 import me.saket.telephoto.zoomable.internal.withZoomAndTranslate
+import me.saket.telephoto.zoomable.internal.zipWithPrevious
 import kotlin.jvm.JvmInline
 import kotlin.math.abs
 
@@ -513,6 +521,7 @@ internal class RealZoomableState internal constructor(
             ) / animatedZoom
           )
         )
+        // Note to self: this can't use transformableState#transformBy() to bypass its offset-locking system.
         gestureState = GestureStateCalculator {
           startGestureState.copy(
             userOffset = animatedOffsetForUi.userOffset,
@@ -581,6 +590,36 @@ internal class RealZoomableState internal constructor(
           }
         )
         previous = value
+      }
+    }
+  }
+
+  @Composable
+  fun RetainPanAcrossImageChangesEffect() {
+    LaunchedEffect(this) {
+      withContext(Dispatchers.Main.immediate) { // To avoid flickers.
+        snapshotFlow { currentGestureStateInputs }
+          .mapNotNull { it?.unscaledContentBounds?.size }
+          .zipWithPrevious(::Pair)
+          .filter { (previous, current) ->
+            abs(current.aspectRatio() - previous.aspectRatio()) < ZoomDeltaEpsilon
+          }
+          .collect { (previous, current) ->
+            val scale = ScaleFactor(
+              scaleX = current.width / previous.width,
+              scaleY = current.height / previous.height,
+            )
+            // This unfortunately cancels any ongoing zoom/pan animations. It would be excellent
+            // to support updating the offset without interrupting animations in the future.
+            val currentGestureState = calculateGestureState()!!
+            transformableState.transform(MutatePriority.PreventUserInput) {
+              gestureState = GestureStateCalculator {
+                currentGestureState.copy(
+                  userOffset = currentGestureState.userOffset * scale
+                )
+              }
+            }
+          }
       }
     }
   }
@@ -702,9 +741,6 @@ internal data class ContentZoomFactor(
   }
 
   companion object {
-    /** Differences below this value are ignored when comparing two zoom values. */
-    const val ZoomDeltaEpsilon = 0.001f
-
     fun minimum(baseZoom: BaseZoomFactor, range: ZoomRange): ContentZoomFactor {
       return ContentZoomFactor(
         baseZoom = baseZoom,
@@ -735,12 +771,18 @@ internal data class ContentZoomFactor(
   }
 }
 
+/** Differences below this value are ignored when comparing two zoom values. */
+private const val ZoomDeltaEpsilon = 0.001f
+
 /** Offset applied by the user on top of a base offset. Similar to [UserZoomFactor]. */
 @JvmInline
 @Immutable
 internal value class UserOffset(val value: Offset) {
   operator fun minus(other: Offset): UserOffset =
     UserOffset(value.minus(other))
+
+  operator fun times(factor: ScaleFactor): UserOffset =
+    UserOffset(value.times(factor))
 }
 
 internal data class ContentOffset(
