@@ -150,7 +150,7 @@ internal class RealZoomableState internal constructor(
     }
   )
 
-  private val gestureStateInputs: GestureStateInputsCalculator by derivedStateOf {
+  private val gestureStateInputsCalculator: GestureStateInputsCalculator by derivedStateOf {
     GestureStateInputsCalculator { viewportSize ->
       if (viewportSize.isUnspecifiedOrEmpty || unscaledContentLocation == ZoomableContentLocation.Unspecified) {
         return@GestureStateInputsCalculator null
@@ -191,7 +191,7 @@ internal class RealZoomableState internal constructor(
   }
 
   private val currentGestureStateInputs: GestureStateInputs? by derivedStateOf {
-    gestureStateInputs.calculate(viewportSize)
+    gestureStateInputsCalculator.calculate(viewportSize)
   }
 
   /** See [PlaceholderBoundsProvider]. */
@@ -344,16 +344,16 @@ internal class RealZoomableState internal constructor(
     //
     // Note to self: these values are divided by zoom because that's how the final offset
     // for UI is calculated: -offset * zoom.
-    return transformUserOffset { finalOffset ->
+    return transformUserOffset { currentOffset ->
       //
       // Move the centroid to the center
       //      of panned content(?)
-      //                 |                         Scale
-      //                 |                           |                Move back
-      //                 |                           |           (+ new translation)
-      //                 |                           |                    |
-      // ________________|______________     ________|_________   ________|_________
-      ((finalOffset + centroid / oldZoom) - (centroid / newZoom + panDelta / oldZoom)).also {
+      //                 |                           Scale
+      //                 |                             |                Move back
+      //                 |                             |           (+ new translation)
+      //                 |                             |                    |
+      // ________________|_______________      ________|_________   ________|_________
+      ((currentOffset + centroid / oldZoom) - (centroid / newZoom + panDelta / oldZoom)).also {
         check(it.isFinite) {
           val debugInfo = collectDebugInfoForIssue41(
             "centroid" to centroid,
