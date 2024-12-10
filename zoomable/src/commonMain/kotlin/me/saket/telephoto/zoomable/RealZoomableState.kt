@@ -426,23 +426,6 @@ internal class RealZoomableState internal constructor(
     )
   }
 
-
-  override suspend fun setCentroid(centroid: Offset, animationSpec: AnimationSpec<Offset>) {
-    transformableState.transform(MutatePriority.UserInput) {
-      var previous = Offset.Zero
-      AnimationState(
-        typeConverter = Offset.VectorConverter,
-        initialValue = Offset.Zero,
-      ).animateTo(
-        targetValue = centroid,
-        animationSpec = animationSpec,
-      ) {
-        transformBy(centroid = this.value - previous)
-        previous = this.value
-      }
-    }
-  }
-
   override suspend fun zoomTo(
     zoomFactor: Float,
     centroid: Offset,
