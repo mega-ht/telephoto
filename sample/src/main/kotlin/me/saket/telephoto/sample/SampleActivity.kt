@@ -46,6 +46,7 @@ import kotlinx.coroutines.delay
 import me.saket.telephoto.sample.gallery.MediaAlbum
 import me.saket.telephoto.sample.gallery.MediaItem
 import me.saket.telephoto.zoomable.DoubleClickToZoomListener
+import me.saket.telephoto.zoomable.ZoomSpec
 import me.saket.telephoto.zoomable.coil.ZoomableAsyncImage
 import me.saket.telephoto.zoomable.rememberZoomableImageState
 import me.saket.telephoto.zoomable.rememberZoomableState
@@ -205,7 +206,11 @@ private fun ImageViewer(
   previousImagePath: String?,
   onImageTap: () -> Unit
 ) {
-  val zoomableState = rememberZoomableState()
+  val zoomableState = rememberZoomableState(
+    zoomSpec = ZoomSpec(
+      maxZoomFactor = 100f
+    )
+  )
   val zoomableImageState = rememberZoomableImageState(zoomableState)
 
   val imageRequest = ImageRequest.Builder(LocalContext.current)
