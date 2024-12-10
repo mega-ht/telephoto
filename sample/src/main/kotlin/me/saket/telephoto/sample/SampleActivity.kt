@@ -126,8 +126,8 @@ class SampleActivity : AppCompatActivity() {
       mutableStateOf(
         // First = high-res, second = low-res
         Pair<String, String?>(
-          "file:///android_asset/thumbnail2.jpeg",
-          "file:///android_asset/thumbnail2.jpeg",
+          "file:///android_asset/thumbnail.jpeg",
+          "file:///android_asset/thumbnail.jpeg",
         )
       )
     }
@@ -136,14 +136,14 @@ class SampleActivity : AppCompatActivity() {
       if (isImageLoaded) return@LaunchedEffect
       delay(2000)
       imagePaths = Pair(
-        "file:///android_asset/smallSize2.jpeg",
-        "file:///android_asset/thumbnail2.jpeg"
+        "file:///android_asset/smallSize.jpeg",
+        "file:///android_asset/thumbnail.jpeg"
       )
 
       delay(2000)
       imagePaths = Pair(
-        "file:///android_asset/fullSize2.jpeg",
-        "file:///android_asset/smallSize2.jpeg"
+        "file:///android_asset/fullSize.jpeg",
+        "file:///android_asset/smallSize.jpeg"
       )
 
       isImageLoaded = true
